@@ -1,0 +1,6 @@
+{
+  "name": "EVE PRIME",
+  "description": "An autonomous AI agent interface for task planning, execution, tool calling, and live telemetry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
