@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/Header';
 import { HypercubeStudio } from './components/HypercubeStudio';
 import { SelfModifyingStudio } from './components/SelfModifyingStudio';
@@ -198,6 +199,7 @@ export const App: React.FC = () => {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 };
