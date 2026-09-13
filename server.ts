@@ -3,6 +3,18 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
+import {
+  getAlgorithms,
+  getAlgorithmById,
+  resetAlgorithm,
+  executeSelfModificationCycle,
+  runAlgorithmSandbox,
+  verifyAlgorithmCode,
+} from "./server/neurosymbolicEngine";
+import { requireAuth, AuthRequest } from "./src/middleware/auth.ts";
+import { getOrCreateUser } from "./src/db/users.ts";
+import { recordEvolutionCycle, getEvolutionHistory } from "./src/db/history.ts";
+import { adminAuth } from "./src/lib/firebase-admin.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,17 +49,134 @@ app.get("/api/health", (_req, res) => {
   res.json({
     status: "online",
     agent: "EVE PRIME",
-    version: "2.5.0-alpha",
+    version: "3.0.0-neurosymbolic",
     hasApiKey: Boolean(process.env.GEMINI_API_KEY),
     activeModel: "gemini-3.8-flash",
     capabilities: [
       "autonomous_decomposition",
-      "tool_orchestration",
+      "neurosymbolic_architecture",
+      "self_modifying_algorithms",
+      "formal_verification",
+      "dual_system_reasoning",
       "code_sandbox",
       "context_memory",
       "telemetry_stream",
     ],
   });
+});
+
+// Firebase Auth & Cloud SQL User Sync
+app.post("/api/auth/sync", requireAuth, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.uid) {
+      return res.status(401).json({ error: "Missing user credentials" });
+    }
+    const user = await getOrCreateUser(req.user.uid, req.user.email || "user@eveprime.internal");
+    res.json({ success: true, user });
+  } catch (err: any) {
+    console.error("Auth sync error:", err);
+    res.status(500).json({ error: "Authentication synchronization failed" });
+  }
+});
+
+// Neurosymbolic Architecture Endpoints
+app.get("/api/neurosymbolic/algorithms", (_req, res) => {
+  try {
+    const algos = getAlgorithms();
+    res.json({ success: true, data: algos });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/neurosymbolic/cycle", async (req, res) => {
+  const { algorithmId, goal = "optimization" } = req.body;
+  if (!algorithmId) {
+    return res.status(400).json({ error: "algorithmId is required" });
+  }
+
+  try {
+    const cycleResult = await executeSelfModificationCycle(
+      algorithmId,
+      getGeminiClient(),
+      goal
+    );
+
+    // Persist verified evolution into Cloud SQL PostgreSQL database
+    if (cycleResult.adopted) {
+      let userId: string | undefined;
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        try {
+          const decoded = await adminAuth.verifyIdToken(authHeader.split("Bearer ")[1]);
+          userId = decoded.uid;
+        } catch {
+          // Non-blocking if optional
+        }
+      }
+
+      await recordEvolutionCycle({
+        algorithmId,
+        userId,
+        generation: cycleResult.generationTo,
+        mutationType: cycleResult.proposal.mutationType,
+        mutationRationale: cycleResult.proposal.mutationRationale,
+        code: cycleResult.proposal.proposedCode,
+        avgLatencyUs: cycleResult.verification.benchmarkAfterUs,
+        soundnessScore: 100,
+        proofTrace: cycleResult.verification.formalProofTrace,
+      });
+    }
+
+    res.json(cycleResult);
+  } catch (err: any) {
+    console.error("Self-modification cycle error:", err);
+    res.status(500).json({ error: err.message || "Failed to execute cycle" });
+  }
+});
+
+app.post("/api/neurosymbolic/execute", (req, res) => {
+  const { algorithmId, input } = req.body;
+  if (!algorithmId) {
+    return res.status(400).json({ error: "algorithmId is required" });
+  }
+
+  try {
+    const result = runAlgorithmSandbox(algorithmId, input);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/neurosymbolic/reset", (req, res) => {
+  const { algorithmId } = req.body;
+  if (!algorithmId) {
+    return res.status(400).json({ error: "algorithmId is required" });
+  }
+
+  try {
+    const reset = resetAlgorithm(algorithmId);
+    res.json({ success: true, data: reset });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/neurosymbolic/verify", (req, res) => {
+  const { algorithmId, candidateCode, invariants } = req.body;
+  if (!algorithmId || !candidateCode) {
+    return res.status(400).json({ error: "algorithmId and candidateCode are required" });
+  }
+
+  try {
+    const algo = getAlgorithmById(algorithmId);
+    const targetInvariants = invariants || algo?.invariants || [];
+    const result = verifyAlgorithmCode(algorithmId, candidateCode, targetInvariants);
+    res.json({ success: true, verification: result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 2. Direct Tool Execution Endpoint

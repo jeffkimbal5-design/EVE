@@ -1,6 +1,6 @@
 {
   "name": "EVE PRIME",
-  "description": "An autonomous AI agent interface for task planning, execution, tool calling, and live telemetry.",
+  "description": "Neurosymbolic AI architecture and self-modifying algorithm engine with formal verification and dual-system reasoning.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
