@@ -12,6 +12,8 @@ import {
   LogIn,
   LogOut,
   User as UserIcon,
+  HardDrive,
+  BrainCircuit
 } from 'lucide-react';
 import { SystemStatus, AgentStatus } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -19,8 +21,8 @@ import { useAuth } from '../context/AuthContext';
 interface HeaderProps {
   systemStatus: SystemStatus | null;
   agentStatus: AgentStatus;
-  activeView: 'hypercube' | 'neurosymbolic' | 'missions';
-  onViewChange: (view: 'hypercube' | 'neurosymbolic' | 'missions') => void;
+  activeView: 'hypercube' | 'neurosymbolic' | 'missions' | 'workspace' | 'metacognition';
+  onViewChange: (view: 'hypercube' | 'neurosymbolic' | 'missions' | 'workspace' | 'metacognition') => void;
   audioEnabled: boolean;
   onToggleAudio: () => void;
 }
@@ -134,6 +136,30 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Layers className="w-3.5 h-3.5 text-cyan-400" />
             <span>MISSION ORCHESTRATION</span>
+          </button>
+
+          <button
+            onClick={() => onViewChange('workspace')}
+            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeView === 'workspace'
+                ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-semibold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <HardDrive className="w-3.5 h-3.5 text-cyan-400" />
+            <span>WORKSPACE</span>
+          </button>
+
+          <button
+            onClick={() => onViewChange('metacognition')}
+            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeView === 'metacognition'
+                ? 'bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-500/40 font-semibold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <BrainCircuit className="w-3.5 h-3.5 text-fuchsia-400" />
+            <span>META COGNITION</span>
           </button>
         </nav>
 

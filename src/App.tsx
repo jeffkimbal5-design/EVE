@@ -3,6 +3,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/Header';
 import { HypercubeStudio } from './components/HypercubeStudio';
 import { SelfModifyingStudio } from './components/SelfModifyingStudio';
+import { WorkspaceStudio } from './components/WorkspaceStudio';
+import { MetacognitionStudio } from './components/MetacognitionStudio';
 import { MissionInput } from './components/MissionInput';
 import { ExecutionGraph } from './components/ExecutionGraph';
 import { ReasoningTrace } from './components/ReasoningTrace';
@@ -21,7 +23,7 @@ import {
 export const App: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [agentStatus, setAgentStatus] = useState<AgentStatus>('idle');
-  const [activeView, setActiveView] = useState<'hypercube' | 'neurosymbolic' | 'missions'>('hypercube');
+  const [activeView, setActiveView] = useState<'hypercube' | 'neurosymbolic' | 'missions' | 'workspace' | 'metacognition'>('hypercube');
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [missionResult, setMissionResult] = useState<MissionResult | null>(null);
   const [displayedSteps, setDisplayedSteps] = useState<ExecutionStep[]>([]);
@@ -148,6 +150,20 @@ export const App: React.FC = () => {
           <SelfModifyingStudio
             onLogEvent={addLog}
             speak={speak}
+          />
+        ) : activeView === 'workspace' ? (
+          /* Google Workspace Integration */
+          <WorkspaceStudio
+            onLogEvent={addLog}
+            speak={speak}
+            missionResult={missionResult}
+          />
+        ) : activeView === 'metacognition' ? (
+          /* Multimodal Metacognitive Chat */
+          <MetacognitionStudio
+            onLogEvent={addLog}
+            speak={speak}
+            missionResult={missionResult}
           />
         ) : (
           /* Autonomous Mission Dispatcher & Graph */

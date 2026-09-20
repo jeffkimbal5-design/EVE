@@ -42,7 +42,7 @@ export interface MissionResult {
 export interface LogEntry {
   id: string;
   timestamp: string;
-  level: 'info' | 'warn' | 'success' | 'agent' | 'tool';
+  level: 'info' | 'warn' | 'success' | 'agent' | 'tool' | 'error';
   message: string;
   source?: string;
 }
